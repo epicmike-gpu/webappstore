@@ -28,57 +28,56 @@ export const App: React.FC = () => {
 
   const { favoriteIds, toggleFavorite, isFavorite, count: favoritesCount } = useFavorites();
 
-  // Fetch categories and apps from server (or fallback to static data)
-  const fetchData = async () => {
-    setLoading(true);
+  // Synchronous + background fetch for version changes
+  const loadVersionData = async (targetVersion: AppVersion) => {
+    // 1. Instant synchronous update
+    const baseCats = targetVersion === 'overseas' ? overseasCategories : cnCategories;
+    const baseApps = targetVersion === 'overseas' ? overseasWebApps : cnWebApps;
+    setCategories(
+      baseCats.map((c) => ({
+        ...c,
+        count: baseApps.filter((a) => a.categoryId === c.id).length,
+      }))
+    );
+    setAllApps(baseApps);
+    setFeaturedApps(baseApps.slice(0, 12));
+
+    // 2. Fetch any custom user-submitted apps from server in background
     try {
-      // 1. Fetch categories
-      const catRes = await fetch(`/api/v1/apps/categories?version=${version}`);
+      const [catRes, featRes, appsRes] = await Promise.all([
+        fetch(`/api/v1/apps/categories?version=${targetVersion}`),
+        fetch(`/api/v1/apps/featured?version=${targetVersion}`),
+        fetch(`/api/v1/apps?version=${targetVersion}`),
+      ]);
+
       if (catRes.ok) {
         const catData = await catRes.json();
-        if (catData.success) {
-          setCategories(catData.data);
-        }
+        if (catData.success && catData.data?.length) setCategories(catData.data);
       }
-
-      // 2. Fetch featured
-      const featRes = await fetch(`/api/v1/apps/featured?version=${version}`);
       if (featRes.ok) {
         const featData = await featRes.json();
-        if (featData.success) {
-          setFeaturedApps(featData.data);
-        }
+        if (featData.success && featData.data?.length) setFeaturedApps(featData.data);
       }
-
-      // 3. Fetch apps
-      const appsRes = await fetch(`/api/v1/apps?version=${version}`);
       if (appsRes.ok) {
         const appsData = await appsRes.json();
-        if (appsData.success) {
-          setAllApps(appsData.data);
-        }
+        if (appsData.success && appsData.data?.length) setAllApps(appsData.data);
       }
-    } catch {
-      // Fallback
-      const baseCats = version === 'overseas' ? overseasCategories : cnCategories;
-      const baseApps = version === 'overseas' ? overseasWebApps : cnWebApps;
-      setCategories(
-        baseCats.map((c) => ({
-          ...c,
-          count: baseApps.filter((a) => a.categoryId === c.id).length,
-        }))
-      );
-      setAllApps(baseApps);
-      setFeaturedApps(baseApps.slice(0, 6));
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      // already loaded base data
     }
   };
 
-  useEffect(() => {
+  const handleVersionChange = (newVersion: AppVersion) => {
+    if (newVersion === version) return;
+    setVersion(newVersion);
     setSelectedCategory('all');
-    fetchData();
-  }, [version]);
+    setSearchQuery('');
+    loadVersionData(newVersion);
+  };
+
+  useEffect(() => {
+    loadVersionData(version);
+  }, []);
 
   // Filtered Apps for main display
   const displayedApps = useMemo(() => {
@@ -117,7 +116,7 @@ export const App: React.FC = () => {
       {/* Top Sticky Header */}
       <Header
         version={version}
-        onVersionChange={setVersion}
+        onVersionChange={handleVersionChange}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         favoritesCount={favoritesCount}
@@ -241,7 +240,8 @@ export const App: React.FC = () => {
         categories={categories}
         version={version}
         onAppAdded={() => {
-          fetchData();
+          loadVersionData(version);
+          setIsAddModalOpen(false);
         }}
       />
 
