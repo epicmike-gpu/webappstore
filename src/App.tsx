@@ -20,7 +20,7 @@ export const App: React.FC = () => {
 
   const [categories, setCategories] = useState<Category[]>(cnCategories);
   const [allApps, setAllApps] = useState<WebApp[]>(cnWebApps);
-  const [featuredApps, setFeaturedApps] = useState<WebApp[]>(cnWebApps.slice(0, 6));
+  const [featuredApps, setFeaturedApps] = useState<WebApp[]>(cnWebApps.slice(0, 12));
   const [loading, setLoading] = useState(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -193,7 +193,7 @@ export const App: React.FC = () => {
                 )}
               </div>
 
-              {/* Grid of App Cards */}
+              {/* 3x3 Grid on Mobile / Responsive Grid on Desktop */}
               {displayedApps.length === 0 ? (
                 <div className="p-12 rounded-3xl neu-flat border border-white/60 text-center space-y-3 max-w-md mx-auto my-8">
                   <div className="w-12 h-12 rounded-2xl bg-neutral-200 text-neutral-600 flex items-center justify-center mx-auto">
@@ -216,7 +216,7 @@ export const App: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
                   {displayedApps.map((app) => (
                     <AppCard
                       key={app.id}

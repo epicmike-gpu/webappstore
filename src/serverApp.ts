@@ -219,7 +219,8 @@ export function createApiRouter() {
       ...(version === 'overseas' ? overseasWebApps : cnWebApps),
       ...customApps[version],
     ];
-    const featured = allApps.slice(0, 6);
+    // Return top 12 featured apps for carousel paging
+    const featured = allApps.slice(0, 12);
     res.json({
       success: true,
       data: featured,
