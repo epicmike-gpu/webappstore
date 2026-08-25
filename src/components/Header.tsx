@@ -40,11 +40,11 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="text-xl font-extrabold text-neutral-900 tracking-tight flex items-center gap-1.5">
                 Web App Store
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 uppercase tracking-wide">
-                  {version === 'cn' ? '国内版' : 'GLOBAL'}
+                  {version === 'cn' ? '国内版' : '海外专区'}
                 </span>
               </h1>
               <p className="text-xs text-neutral-700">
-                {version === 'cn' ? '精选网页应用与效率工具' : 'Curated Web Applications Directory'}
+                {version === 'cn' ? '精选国内热门网页应用与效率工具' : '全球顶尖 Web 应用程序与海外服务导航'}
               </p>
             </div>
           </div>
