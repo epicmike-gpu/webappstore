@@ -6,6 +6,7 @@ import { AppCard } from './components/AppCard';
 import { FavoritesView } from './components/FavoritesView';
 import { AddAppModal } from './components/AddAppModal';
 import { AppDetailsModal } from './components/AppDetailsModal';
+import { PullToRefresh } from './components/PullToRefresh';
 import { useFavorites } from './hooks/useFavorites';
 import { AppVersion, Category, WebApp } from './types';
 import { cnCategories, cnWebApps } from './data/webapps-cn';
@@ -125,113 +126,119 @@ export const App: React.FC = () => {
         onOpenAddModal={() => setIsAddModalOpen(true)}
       />
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        {currentTab === 'favorites' ? (
-          <FavoritesView
-            favoriteApps={favoriteApps}
-            onOpenDetails={setSelectedApp}
-            onToggleFavorite={toggleFavorite}
-            isFavorite={isFavorite}
-            onBackToStore={() => setCurrentTab('store')}
-            version={version}
-          />
-        ) : (
-          <div className="space-y-6">
-            {/* Category Filter Pills */}
-            <CategoryPills
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              totalApps={allApps.length}
+      {/* Pull down to auto refresh wrapper */}
+      <PullToRefresh
+        onRefresh={() => loadVersionData(version)}
+        version={version}
+      >
+        {/* Main Container */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          {currentTab === 'favorites' ? (
+            <FavoritesView
+              favoriteApps={favoriteApps}
+              onOpenDetails={setSelectedApp}
+              onToggleFavorite={toggleFavorite}
+              isFavorite={isFavorite}
+              onBackToStore={() => setCurrentTab('store')}
               version={version}
             />
-
-            {/* Featured Section (Shown when no search and on 'all' tab) */}
-            {!searchQuery && selectedCategory === 'all' && (
-              <FeaturedCarousel
-                apps={featuredApps}
-                onOpenApp={setSelectedApp}
-                onToggleFavorite={toggleFavorite}
-                isFavorite={isFavorite}
-                version={version}
+          ) : (
+            <div className="space-y-6">
+              {/* Category Filter Pills */}
+              <CategoryPills
+                categories={categories}
+                selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
+                totalApps={allApps.length}
+                version={version}
               />
-            )}
 
-            {/* App Catalog Section */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-indigo-100 text-indigo-600">
-                    <Compass className="w-4 h-4" />
-                  </div>
-                  <h2 className="text-base font-bold text-neutral-900">
-                    {searchQuery
-                      ? version === 'cn'
-                        ? `搜索结果: "${searchQuery}"`
-                        : `Search Results for "${searchQuery}"`
-                      : selectedCategory === 'all'
-                      ? version === 'cn'
-                        ? '全部精选 Web 应用程序'
-                        : 'Explore All Web Applications'
-                      : selectedCategoryObj?.name || '分类应用'}
-                  </h2>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-700 font-bold">
-                    {displayedApps.length}
-                  </span>
-                </div>
-
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-xs font-semibold text-neutral-600 hover:text-neutral-900"
-                  >
-                    {version === 'cn' ? '清除筛选' : 'Clear search'}
-                  </button>
-                )}
-              </div>
-
-              {/* 3x3 Grid on Mobile / Responsive Grid on Desktop */}
-              {displayedApps.length === 0 ? (
-                <div className="p-12 rounded-3xl neu-flat border border-white/60 text-center space-y-3 max-w-md mx-auto my-8">
-                  <div className="w-12 h-12 rounded-2xl bg-neutral-200 text-neutral-600 flex items-center justify-center mx-auto">
-                    <Search className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-sm font-bold text-neutral-800">
-                    {version === 'cn' ? '未找到相关 Web 应用' : 'No Web Apps Found'}
-                  </h3>
-                  <p className="text-xs text-neutral-600">
-                    {version === 'cn'
-                      ? '您可以尝试使用其他关键词，或点击右上角「提交应用」将其收录进来'
-                      : 'Try different search terms or click "Submit App" to add it'}
-                  </p>
-                  <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="mt-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all inline-flex items-center gap-1.5"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{version === 'cn' ? '提交收录' : 'Submit Application'}</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
-                  {displayedApps.map((app) => (
-                    <AppCard
-                      key={app.id}
-                      app={app}
-                      onOpenDetails={setSelectedApp}
-                      onToggleFavorite={toggleFavorite}
-                      isFavorite={isFavorite(app.id)}
-                      version={version}
-                    />
-                  ))}
-                </div>
+              {/* Featured Section (Shown when no search and on 'all' tab) */}
+              {!searchQuery && selectedCategory === 'all' && (
+                <FeaturedCarousel
+                  apps={featuredApps}
+                  onOpenApp={setSelectedApp}
+                  onToggleFavorite={toggleFavorite}
+                  isFavorite={isFavorite}
+                  version={version}
+                  onSelectCategory={setSelectedCategory}
+                />
               )}
-            </section>
-          </div>
-        )}
-      </main>
+
+              {/* App Catalog Section */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded-lg bg-indigo-100 text-indigo-600">
+                      <Compass className="w-4 h-4" />
+                    </div>
+                    <h2 className="text-base font-bold text-neutral-900">
+                      {searchQuery
+                        ? version === 'cn'
+                          ? `搜索结果: "${searchQuery}"`
+                          : `Search Results for "${searchQuery}"`
+                        : selectedCategory === 'all'
+                        ? version === 'cn'
+                          ? '全部精选 Web 应用程序'
+                          : 'Explore All Web Applications'
+                        : selectedCategoryObj?.name || '分类应用'}
+                    </h2>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-700 font-bold">
+                      {displayedApps.length}
+                    </span>
+                  </div>
+
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="text-xs font-semibold text-neutral-600 hover:text-neutral-900"
+                    >
+                      {version === 'cn' ? '清除筛选' : 'Clear search'}
+                    </button>
+                  )}
+                </div>
+
+                {/* 3x3 Grid on Mobile / Responsive Grid on Desktop */}
+                {displayedApps.length === 0 ? (
+                  <div className="p-12 rounded-3xl neu-flat border border-white/60 text-center space-y-3 max-w-md mx-auto my-8">
+                    <div className="w-12 h-12 rounded-2xl bg-neutral-200 text-neutral-600 flex items-center justify-center mx-auto">
+                      <Search className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm font-bold text-neutral-800">
+                      {version === 'cn' ? '未找到相关 Web 应用' : 'No Web Apps Found'}
+                    </h3>
+                    <p className="text-xs text-neutral-600">
+                      {version === 'cn'
+                        ? '您可以尝试使用其他关键词，或点击右上角「提交应用」将其收录进来'
+                        : 'Try different search terms or click "Submit App" to add it'}
+                    </p>
+                    <button
+                      onClick={() => setIsAddModalOpen(true)}
+                      className="mt-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all inline-flex items-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{version === 'cn' ? '提交收录' : 'Submit Application'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
+                    {displayedApps.map((app) => (
+                      <AppCard
+                        key={app.id}
+                        app={app}
+                        onOpenDetails={setSelectedApp}
+                        onToggleFavorite={toggleFavorite}
+                        isFavorite={isFavorite(app.id)}
+                        version={version}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+        </main>
+      </PullToRefresh>
 
       {/* Add App Modal */}
       <AddAppModal
